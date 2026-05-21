@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Редактирование проката</title>
+</head>
+<body>
+    <h1>Изменить параметры проката автомобиля</h1>
+    <p>Вы редактируете заказ №{{ rental.id }}</p>
+    
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Сохранить изменения</button>
+    </form>
+    <p><a href="{% url 'lab_5:profile' %}">Отмена (Назад в профиль)</a></p>
+</body>
+</html>

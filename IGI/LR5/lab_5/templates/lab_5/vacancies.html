@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Вакансии</title>
+</head>
+<body>
+    <h1>Актуальные вакансии</h1>
+    <p><a href="{% url 'lab_5:home' %}">На главную</a></p>
+    <hr>
+    {% for vac in vacancies %}
+        <h2>{{ vac.title }} (ЗП: {{ vac.salary }})</h2>
+        <p>{{ vac.description }}</p>
+        <hr>
+    {% empty %}
+        <p>На данный момент открытых вакансий нет.</p>
+    {% endfor %}
+</body>
+</html>

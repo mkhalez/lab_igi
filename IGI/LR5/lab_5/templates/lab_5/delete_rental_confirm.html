@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Отмена заказа</title>
+</head>
+<body>
+    <h1>Вы уверены, что хотите отменить прокат?</h1>
+    <p>Автомобиль: <strong>{{ rental.car }}</strong></p>
+    <p>Дата начала: {{ rental.rent_date|date:"d/m/Y" }}</p>
+    
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" style="color: red; font-weight: bold;">Да, отменить заказ</button>
+    </form>
+    
+    <p><a href="{% url 'lab_5:profile' %}">Нет, вернуться в личный кабинет</a></p>
+</body>
+</html>
