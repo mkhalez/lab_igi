@@ -1,9 +1,44 @@
 import datetime
 import re
 from django import forms
+from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from .models import Rental, Car, Review, Client
+
+
+class RegistrationForm(UserCreationForm):
+    """Форма регистрации с обязательным ограничением возраста 18+"""
+    birth_date = forms.DateField(
+        label="Дата рождения",
+        widget=forms.DateInput(attrs={'type': 'date'}),
+        error_messages={
+            'required': "Укажите вашу дату рождения.",
+        },
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        today = datetime.date.today()
+        max_birth_date = today.replace(year=today.year - 18)
+        self.fields['birth_date'].widget.attrs['max'] = max_birth_date.strftime('%Y-%m-%d')
+
+    def clean_birth_date(self):
+        birth_date = self.cleaned_data.get('birth_date')
+        today = datetime.date.today()
+        max_birth_date = today.replace(year=today.year - 18)
+
+        if birth_date > today:
+            raise ValidationError("Дата рождения не может быть в будущем.")
+
+        age = today.year - birth_date.year - (
+            (today.month, today.day) < (birth_date.month, birth_date.day)
+        )
+        if birth_date > max_birth_date or age < 18:
+            raise ValidationError("Регистрация доступна только пользователям от 18 лет.")
+
+        self.calculated_age = age
+        return birth_date
 
 class CarRentalForm(forms.ModelForm):
     """Форма для оформления проката автомобиля зарегистрированным клиентом"""

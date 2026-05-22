@@ -4,7 +4,7 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from .forms import CarRentalForm
+from .forms import CarRentalForm, RegistrationForm
 from .models import Rental, PromoCode, Client
 import datetime
 from django.http import HttpResponse
@@ -138,16 +138,25 @@ def logout_view(request):
 def register_view(request):
     """Контроллер страницы регистрации"""
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = RegistrationForm(request.POST)
         if form.is_valid():
             user = form.save() 
+            Client.objects.get_or_create(
+                first_name=user.first_name or user.username,
+                last_name=user.last_name or "Пользователь",
+                defaults={
+                    'age': form.calculated_age,
+                    'address': 'Не указан',
+                    'phone': '+375 (29) 000-00-00',
+                }
+            )
             login(request, user)
             logger.info(f"Зарегистрирован новый пользователь: '{user.username}'")
             return redirect('lab_5:home')
         else:
             logger.warning("Ошибка валидации формы при регистрации нового пользователя.")
     else:
-        form = UserCreationForm()
+        form = RegistrationForm()
     
     return render(request, 'lab_5/register.html', {'form': form})
 
