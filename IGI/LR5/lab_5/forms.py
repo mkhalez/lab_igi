@@ -34,7 +34,6 @@ class ReviewForm(forms.ModelForm):
 class ClientProfileForm(forms.ModelForm):
     """Форма редактирования профиля клиента с валидацией по ТЗ"""
     
-    # Заменили verbose_name на label
     phone = forms.CharField(
         max_length=20,
         label="Телефон",  

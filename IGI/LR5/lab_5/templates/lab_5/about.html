@@ -1,30 +1,19 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>О компании — Прокат авто</title>
-</head>
-<body>
-    <header>
-        <nav>
-            <a href="{% url 'lab_5:home' %}">Главная</a> | 
-            <a href="{% url 'lab_5:about' %}">О компании</a>
-        </nav>
-    </header>
-    <hr>
+{% extends 'lab_5/base.html' %}
 
-    <h1>О нашей компании</h1>
+{% block title %}О компании — Прокат авто{% endblock %}
 
-    {% if company_info %}
-        <h2>{{ company_info.title }}</h2>
-        <p>{{ company_info.text_content }}</p>
-        
-        {% if company_info.history_years %}
-            <h3>Наша история по годам:</h3>
-            <p>{{ company_info.history_years }}</p>
-        {% endif %}
-    {% else %}
-        <p>Информация о компании пока не заполнена в базе данных. Добавьте её через панель администратора в таблицу Company Info.</p>
+{% block content %}
+<h1>О нашей компании</h1>
+
+{% if company_info %}
+    <h2>{{ company_info.title }}</h2>
+    <p>{{ company_info.text_content }}</p>
+    
+    {% if company_info.history_years %}
+        <h3>Наша история по годам:</h3>
+        <p>{{ company_info.history_years }}</p>
     {% endif %}
-</body>
-</html>
+{% else %}
+    <p>Информация о компании пока не заполнена в базе данных. Добавьте её через панель администратора в таблицу Company Info.</p>
+{% endif %}
+{% endblock %}

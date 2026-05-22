@@ -10,10 +10,8 @@ class RentalModelsTestCase(TestCase):
     """Тестирование моделей и базовой логики подсчета стоимости"""
 
     def setUp(self):
-        # Убрали description, оставляем только существующее поле name
         self.car_type = CarType.objects.create(name="Седан")
         
-        # Оставшаяся часть setUp...
         self.car = Car.objects.create(
             car_type=self.car_type,
             license_plate="1111 AX-7",
@@ -24,7 +22,6 @@ class RentalModelsTestCase(TestCase):
             rental_price_per_day=50.00
         )
         
-        # Создаем клиента
         self.client_user = RentalClient.objects.create(
             first_name="Иван",
             last_name="Иванов",
@@ -123,7 +120,6 @@ class StatisticsTestCase(TestCase):
     """Тестирование работы математической статистики и генерации Matplotlib"""
 
     def setUp(self):
-        # Создаем пользователя-менеджера или суперюзера, чтобы пустило на страницу статистики
         self.user_employee = User.objects.create_user(username='stat_manager', password='password123', is_staff=True)
         
         self.car_type = CarType.objects.create(name="Седан")
@@ -141,10 +137,8 @@ class StatisticsTestCase(TestCase):
 
     def test_statistics_calculations(self):
         """Проверяем правильность расчета средних значений коммерческой службы"""
-        # ДОБАВЬ ЭТУ СТРОКУ, чтобы залогинить тестового менеджера/персонал
         self.client.login(username='stat_manager', password='password123')
         
-        # Теперь запрос вернет 200, а не 302 редирект
         response = self.client.get(reverse('lab_5:statistics'))
         self.assertEqual(response.status_code, 200)
         

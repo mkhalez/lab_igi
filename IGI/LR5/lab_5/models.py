@@ -101,10 +101,8 @@ class Rental(models.Model):
     rent_date = models.DateField(verbose_name="Дата выдачи")
     days_count = models.PositiveIntegerField(verbose_name="Количество дней проката")
     
-    # Делаем поле необязательным для заполнения вручную, так как оно считается автоматически
     return_date = models.DateField(verbose_name="Ожидаемая дата возврата", null=True, blank=True)
     
-    # Новые поля для скидок и штрафов по ТЗ
     discount = models.ForeignKey(Discount, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Примененная скидка")
     penalty = models.ForeignKey(Penalty, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Примененный штраф")
     
@@ -121,20 +119,17 @@ class Rental(models.Model):
         """Бизнес-логика: Расчет стоимости с учетом года выпуска, скидок и штрафов"""
         base_rate = float(self.car.rental_price_per_day)
         
-        # Зависимость от года выпуска по ТЗ
         if self.car.year >= 2025:
-            base_rate *= 1.25  # Свежие авто дороже
+            base_rate *= 1.25 
         elif self.car.year < 2016:
-            base_rate *= 0.85  # Старые авто дешевле
+            base_rate *= 0.85  
             
         raw_cost = base_rate * self.days_count
-        
-        # Применяем скидку
+
         discount_amount = 0
         if self.discount:
             discount_amount = raw_cost * (self.discount.percent / 100)
             
-        # Применяем штраф
         penalty_amount = 0
         if self.penalty:
             penalty_amount = float(self.penalty.amount)
@@ -142,10 +137,8 @@ class Rental(models.Model):
         return round(raw_cost - discount_amount + penalty_amount, 2)
 
     def save(self, *args, **kwargs):
-        # Авторасчет даты возврата
         if not self.return_date:
             self.return_date = self.rent_date + datetime.timedelta(days=self.days_count)
-        # Вычисление цены по формуле ТЗ
         self.total_price = self.calculate_cost()
         super().save(*args, **kwargs)
 

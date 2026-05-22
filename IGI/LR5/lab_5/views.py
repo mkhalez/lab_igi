@@ -18,11 +18,13 @@ import requests
 import logging
 import io
 import base64
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 import matplotlib
 matplotlib.use('Agg') 
 import matplotlib.pyplot as plt
-
-# Инициализация логгера (уровень будет браться из настроек settings.py)
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.decorators import user_passes_test
+# create_rental
 logger = logging.getLogger(__name__)
 
 def home_view(request):
@@ -66,14 +68,12 @@ def cars_list_view(request):
             logger.debug(f"Успешно получен курс EUR: {eur_rate}")
             
     except requests.RequestException as e:
-        # Уровень ERROR для критических сетевых сбоев сторонних сервисов
         logger.error(f"Ошибка при подключении к API Нацбанка РБ: {e}")
 
     for car in cars:
         price_in_byn = float(car.rental_price_per_day)
         car.price_usd = round(price_in_byn / usd_rate, 2)
         car.price_eur = round(price_in_byn / eur_rate, 2)
-    # ---------------------------------
 
     search_query = request.GET.get('search', '')
     category_id = request.GET.get('category', '')
@@ -207,7 +207,7 @@ def profile_view(request):
 
 @login_required(login_url='lab_5:login')
 def create_rental_view(request):
-    """Оформление нового проката автомобиля (Операция Create из CRUD)"""
+    """Оформление нового проката автомобиля"""
     client, _ = Client.objects.get_or_create(
         first_name=request.user.first_name or request.user.username,
         last_name=request.user.last_name or "Пользователь"
@@ -233,7 +233,7 @@ def create_rental_view(request):
 
 @login_required(login_url='lab_5:login')
 def edit_rental_view(request, rental_id):
-    """Редактирование существующего заказа (Операция Update из CRUD)"""
+    """Редактирование существующего заказа"""
     rental = get_object_or_404(Rental, id=rental_id)
     
     if rental.client.first_name != (request.user.first_name or request.user.username):
@@ -275,6 +275,7 @@ def delete_rental_view(request, rental_id):
     return render(request, 'lab_5/delete_rental_confirm.html', {'rental': rental})
 
 @login_required(login_url='lab_5:login')
+@user_passes_test(lambda user: user.is_superuser, login_url='lab_5:login')
 def statistics_view(request):
     """Контроллер для отображения статистики сайта, временных показателей и графиков Matplotlib"""
     logger.info(f"Формирование сводных финансовых показателей для '{request.user.username}'")
@@ -338,11 +339,19 @@ def statistics_view(request):
         except Exception as ex:
             logger.error(f"Не удалось сгенерировать график распределения Matplotlib: {ex}")
 
+    user_timezone_name = request.GET.get('tz') or timezone.get_current_timezone_name()
+    try:
+        user_timezone = ZoneInfo(user_timezone_name)
+    except ZoneInfoNotFoundError:
+        user_timezone_name = timezone.get_current_timezone_name()
+        user_timezone = timezone.get_current_timezone()
+
     now_local = timezone.now()
     now_utc = datetime.datetime.now(datetime.timezone.utc)
+    now_user_timezone = now_local.astimezone(user_timezone)
     
-    current_year = now_local.year
-    current_month = now_local.month
+    current_year = now_user_timezone.year
+    current_month = now_user_timezone.month
     
     text_cal = calendar.TextCalendar(firstweekday=0)
     html_calendar = text_cal.formatmonth(current_year, current_month)
@@ -359,7 +368,8 @@ def statistics_view(request):
         
         'chart_image': chart_base64,
         
-        'now_local': now_local,
+        'user_timezone_name': user_timezone_name,
+        'now_local': now_user_timezone,
         'now_utc': now_utc,
         'html_calendar': html_calendar,
     }
@@ -414,3 +424,7 @@ def privacy_view(request):
     """Страница-заглушка политики конфиденциальности по ТЗ"""
     logger.debug("Запрос страницы политики конфиденциальности")
     return render(request, 'lab_5/privacy.html')
+
+def news_view(request):
+    news_list = News.objects.order_by('-published_at')
+    return render(request, 'lab_5/news.html', {'news_list': news_list})
